@@ -6,10 +6,9 @@ from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import IntegrityError
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
-import os
 
 # Database setup
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://root:0000@8000:port/Ram")  # Cambia estos valores
+DATABASE_URL = "mysql+pymysql://root:0000@localhost/Ram"
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -85,7 +84,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
         db.refresh(db_user)
     except IntegrityError as e:
         db.rollback()
-        if "unique constraint" in str(e.orig):
+        if "Duplicate entry" in str(e.orig):
             raise HTTPException(status_code=400, detail="Email already registered")
         raise HTTPException(status_code=400, detail=f"Integrity Error: {str(e.orig)}")
     except Exception as e:
@@ -128,7 +127,7 @@ def create_medication(medication: MedicationCreate, db: Session = Depends(get_db
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Unexpected Error: {str(e)}")
-    return {"message": "Medication registered successfully", "medication": db_medication.id"}
+    return {"message": "Medication registered successfully", "medication": db_medication.id}
 
 # Obtener todos los medicamentos
 @app.get("/medications/")
